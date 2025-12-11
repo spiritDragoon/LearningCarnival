@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Pipeline Sprint</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // Lucide React icons as inline SVG components
+        const ChevronRight = () => (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+        );
+
+        const Award = () => (
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="8" r="7"></circle>
+                <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+            </svg>
+        );
+
+        const Target = () => (
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <circle cx="12" cy="12" r="6"></circle>
+                <circle cx="12" cy="12" r="2"></circle>
+            </svg>
+        );
+
+        const TrendingUp = () => (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                <polyline points="17 6 23 6 23 12"></polyline>
+            </svg>
+        );
+
+        const CheckCircle = () => (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+        );
+
+        function PipelineGame() {
+          const [gameStarted, setGameStarted] = useState(false);
+          const [currentPhase, setCurrentPhase] = useState(0);
+          const [score, setScore] = useState(0);
+          const [momentum, setMomentum] = useState(50);
+          const [trustScore, setTrustScore] = useState(50);
+          const [capacity, setCapacity] = useState(100);
+          const [gameEnded, setGameEnded] = useState(false);
+          const [choices, setChoices] = useState([]);
+          const [showFeedback, setShowFeedback] = useState(false);
+          const [currentFeedback, setCurrentFeedback] = useState(null);
+
+          const shuffleArray = (array) => {
+            if (!Array.isArray(array) || array.length === 0) return [];
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+          };
+
+          const getAllPhaseOptions = (phaseNum, decisionHistory) => {
+            const timeInvested = decisionHistory[0]?.timeInvested || 'balanced';
+            const reachApproach = decisionHistory[1]?.reachApproach || null;
+            const engageStrategy = decisionHistory[2]?.engageStrategy || null;
+
+            if (phaseNum === 0) {
+              return [
+                {
+                  text: "Spend 35 hours on Glenmark. Deep org research, stakeholder interviews, become the expert.",
+                  strategy: "concentrated",
+                  points: 14,
+                  feedback: "You're expert on Glenmark. But only 1 prospect by week 2. Expert-level ready but narrow window. All eggs in one basket.",
+                  timeInvested: "concentrated",
+                  dealSize: "large",
+                  momentum: -15,
+                  trust: +18
+                },
+                {
+                  text: "Quick scan of top 5 (2-3 hrs each), deep dive on the hottest 2 only.",
+                  strategy: "balanced",
+                  points: 16,
+                  feedback: "You filter early. By day 8, in real conversations with 2 prospects. Didn't fully vet but have options.",
+                  timeInvested: "balanced",
+                  dealSize: "medium",
+                  momentum: +3,
+                  trust: +6
+                },
+                {
+                  text: "1 hour per company—LinkedIn, funding, pain points. Start outreach tomorrow.",
+                  strategy: "rapid",
+                  points: 12,
+                  feedback: "4 warm conversations by day 10. But reactive—you adapt instead of steer. Faster but reckless. Low confidence in your positioning.",
+                  timeInvested: "rapid",
+                  dealSize: "small",
+                  momentum: +22,
+                  trust: -15
+                }
+              ];
+            }
+
+            if (phaseNum === 1) {
+              if (timeInvested === 'concentrated') {
+                return [
+                  {
+                    text: "Message CTO directly with specific insights about their compliance gaps. Gutsy, high-risk.",
+                    strategy: "directLeader",
+                    points: 15,
+                    feedback: "Gutsy. CTO impressed by specificity but caught off-guard. She's defensive. You're now competing on her turf without relationship.",
+                    reachApproach: "directLeader",
+                    hasCompetitor: false,
+                    momentum: +6,
+                    trust: -8,
+                    capacity: -8
+                  },
+                  {
+                    text: "Start with Sarah (QA head). Build advocate who introduces you to the CTO later.",
+                    strategy: "safeButton",
+                    points: 18,
+                    feedback: "Sarah responds warmly. Not a decision-maker but becomes advocate. Slower climb to power but strong start.",
+                    reachApproach: "safeButton",
+                    hasCompetitor: false,
+                    momentum: +2,
+                    trust: +16,
+                    capacity: -12
+                  },
+                  {
+                    text: "Hit Sarah + 2 other stakeholders with personalized messages. Maximize coverage.",
+                    strategy: "multiTouch",
+                    points: 11,
+                    feedback: "Get 2 responses. Managing 2 conversations—they find out you're talking to each other. Red flag. Smells like spray-and-pray.",
+                    reachApproach: "multiTouch",
+                    hasCompetitor: false,
+                    momentum: +4,
+                    trust: -5,
+                    capacity: -20
+                  }
+                ];
+              }
+
+              return [
+                {
+                  text: "Commit all resources to Glenmark. Bigger deal, longer cycle. Risk: Cipla might sign elsewhere while you're busy.",
+                  strategy: "targetBig",
+                  points: 10,
+                  feedback: "All-in race with competitor. Cipla bored, signs elsewhere. 4-month slog. High risk, high reward—but you lose momentum.",
+                  reachApproach: "targetBig",
+                  hasCompetitor: true,
+                  dealSize: "large",
+                  momentum: -18,
+                  trust: +8
+                },
+                {
+                  text: "Close Cipla fast ($40K in 6 weeks), build momentum, then circle back to Glenmark with proof.",
+                  strategy: "quickWin",
+                  points: 13,
+                  feedback: "Cipla closes $40K in 6 weeks. Great momentum. While focused, Glenmark buys from competitor. You won a small deal, lost the big one.",
+                  reachApproach: "quickWin",
+                  hasCompetitor: true,
+                  dealSize: "small",
+                  momentum: +20,
+                  trust: +4
+                },
+                {
+                  text: "Push Cipla aggressively, keep Glenmark warm. Both move forward simultaneously.",
+                  strategy: "dualPath",
+                  points: 19,
+                  feedback: "Cipla closes week 7 ($45K). Glenmark reaches back to you week 12. Hard to manage both. You're stretched thin.",
+                  reachApproach: "dualPath",
+                  hasCompetitor: true,
+                  dealSize: "both",
+                  momentum: +6,
+                  trust: +10,
+                  capacity: -18
+                }
+              ];
+            }
+
+            if (phaseNum === 2) {
+              if (timeInvested === 'concentrated' && reachApproach === 'directLeader') {
+                return [
+                  {
+                    text: "Lead with your detailed walkthrough + mockup. Anchor to your solution.",
+                    strategy: "overPrepared",
+                    points: 12,
+                    feedback: "You talk for 30 minutes. She interrupts: 'We need to understand our own process first.' You've anchored too hard to your solution.",
+                    momentum: -10,
+                    trust: -8,
+                    capacity: -28
+                  },
+                  {
+                    text: "Acknowledge your prep, then ask them to define success first. Make it about their constraints.",
+                    strategy: "flipToThem",
+                    points: 20,
+                    feedback: "She opens up. 'Our IT team is burned out.' You finally understand the real constraint. Shifts entire deal approach.",
+                    momentum: +8,
+                    trust: +16,
+                    capacity: -15,
+                    engageStrategy: "flipToThem"
+                  },
+                  {
+                    text: "Admit uncertainty upfront. Bring your implementation lead to ask the hard questions together.",
+                    strategy: "bringExpert",
+                    points: 16,
+                    feedback: "She respects the humility. Lead asks smart questions. But now you're dependent on another person. Less control.",
+                    momentum: +5,
+                    trust: +14,
+                    capacity: -22
+                  }
+                ];
+              }
+
+              if (reachApproach === 'safeButton' && timeInvested === 'concentrated') {
+                return [
+                  {
+                    text: "Have Sarah set up a call where she pitches you as her solution. She becomes your champion.",
+                    strategy: "sarahAsChampion",
+                    points: 10,
+                    feedback: "Sarah does this. But CTO sees it as Sarah's pet project, not a business priority. You're stuck in the weeds.",
+                    momentum: -2,
+                    trust: +5,
+                    capacity: -10
+                  },
+                  {
+                    text: "Ask Sarah to facilitate, but address CTO directly. You own the narrative.",
+                    strategy: "bypassToReal",
+                    points: 18,
+                    feedback: "Sarah facilitates but you own the narrative. CTO appreciates direct approach. You move faster but risk offending Sarah.",
+                    momentum: +8,
+                    trust: +7,
+                    capacity: -14
+                  },
+                  {
+                    text: "Schedule joint call with Sarah, you, CTO, and your implementation lead. Make it a team discussion.",
+                    strategy: "collaborative",
+                    points: 19,
+                    feedback: "Sarah feels included. CTO sees collaborative approach. But managing 4 people's concerns is slower and harder.",
+                    momentum: +2,
+                    trust: +12,
+                    capacity: -24
+                  }
+                ];
+              }
+
+              return [
+                {
+                  text: "Share a similar client success story. Build confidence through precedent.",
+                  strategy: "storytelling",
+                  points: 13,
+                  feedback: "Good bridge but they wonder if story is comparable to their situation. Trust goes up slightly but doubts remain.",
+                  momentum: +1,
+                  trust: +4,
+                  capacity: -6
+                },
+                {
+                  text: "Turn their concern into a diagnostic question. Dig into what 'bad experience' really means to them.",
+                  strategy: "turnIntoDiagnostic",
+                  points: 22,
+                  feedback: "They tell you what NOT to do. You now know exactly what to avoid. Deal approach becomes clear.",
+                  momentum: +10,
+                  trust: +14,
+                  capacity: -12,
+                  engageStrategy: "turnIntoDiagnostic"
+                },
+                {
+                  text: "Offer a pilot with a guarantee: 'If we don't hit X in 90 days, you don't pay. We're betting on ourselves.'",
+                  strategy: "derisking",
+                  points: 18,
+                  feedback: "Bold move. They like confidence. But you've taken ALL the risk. Deal moves forward but execution pressure is brutal.",
+                  momentum: +12,
+                  trust: +5,
+                  capacity: -30
+                }
+              ];
+            }
+
+            if (phaseNum === 3) {
+              if (engageStrategy === 'flipToThem' && timeInvested === 'concentrated') {
+                return [
+                  {
+                    text: "Absorb implementation costs: 'We'll do 60/40 implementation—we absorb $30K. You only pay the software.' You prioritize closing the deal.",
+                    strategy: "serviceHeavy",
+                    points: 16,
+                    feedback: "Deal closes immediately. CTO loves the investment. But your margin is thin ($50K profit on $80K deal). You've bet on referrals paying off.",
+                    momentum: +12,
+                    trust: +18,
+                    capacity: -35
+                  },
+                  {
+                    text: "Phased approach: 'We'll do 60/40 for 3 months while your team ramps up, then shift to 50/50 as they own it.' Balanced partnership model.",
+                    strategy: "hybrid",
+                    points: 18,
+                    feedback: "CTO agrees. Deal closes. Your cost is only $18K. Better margin AND she appreciates the partnership model. Her team builds capability.",
+                    momentum: +9,
+                    trust: +14,
+                    capacity: -20
+                  },
+                  {
+                    text: "Protect your margin: 'Let's do 50/50 split from day one. You handle heavy lifting weeks 1-2, then ease off.' You hold firm on pricing.",
+                    strategy: "redefineNeeds",
+                    points: 11,
+                    feedback: "CTO pushes back hard. Deal stalls 2 weeks over implementation split. You lose negotiating position and cave to 60/40 anyway.",
+                    momentum: -8,
+                    trust: +4,
+                    capacity: -18
+                  }
+                ];
+              }
+
+              return [
+                {
+                  text: "Risk quantification pitch: 'A failed rollout costs you 2 weeks of disruption. A phased pilot proves value first. It's the smarter path.' Logical, conservative approach.",
+                  strategy: "quantifyRisk",
+                  points: 12,
+                  feedback: "CFO agrees in principle. But competitor is claiming they'll roll out cleanly with no risk. You're still being compared on execution speed, not strategy.",
+                  momentum: +4,
+                  trust: +6,
+                  capacity: -8
+                },
+                {
+                  text: "Performance guarantee: 'Run a 14-day pilot. If we don't deliver 30% improvement, we walk away—no payment. We're betting on ourselves.' Bold confidence move.",
+                  strategy: "guaranteeResults",
+                  points: 17,
+                  feedback: "CFO respects the confidence. Deal moves forward. But now you're staking everything on hitting metrics in 2 weeks with heavy scrutiny. Execution pressure is intense.",
+                  momentum: +14,
+                  trust: +4,
+                  capacity: -40
+                },
+                {
+                  text: "Positioning vs competitors: 'Competitors move fast because they're confident. We're intentional because we're client-first. You want partners, not vendors.' Differentiation play.",
+                  strategy: "reframeCompetition",
+                  points: 14,
+                  feedback: "Nice narrative. But CFO still wants to evaluate both vendors independently. You're in the running but not clearly differentiated on this argument.",
+                  momentum: +1,
+                  trust: +9,
+                  capacity: -4
+                }
+              ];
+            }
+
+            if (phaseNum === 4) {
+              if (engageStrategy === 'flipToThem') {
+                return [
+                  {
+                    text: "Push for division 2 expansion now: 'Let's add division 2 this quarter while momentum is high. Lock in a multi-year deal.' You're capitalizing on success.",
+                    strategy: "aggressive",
+                    points: 10,
+                    feedback: "CTO pushes back hard: 'Let's prove division 2 works first.' You've created internal resistance by moving too fast.",
+                    momentum: +2,
+                    trust: +6,
+                    capacity: -10
+                  },
+                  {
+                    text: "Ask them to lead: 'What division should we expand to next? What would make the most sense for your team?' You let THEM decide the pace.",
+                    strategy: "matchPace",
+                    points: 21,
+                    feedback: "Perfect pacing. She stays engaged. She decides division 2 makes sense. You move forward on her timeline, not yours.",
+                    momentum: +8,
+                    trust: +20,
+                    capacity: -8
+                  },
+                  {
+                    text: "Shift to reference strategy: 'You've been a great partner. Before expansion, become a case study? Testimonial + intro to peers helps us grow together.' You deprioritize expansion.",
+                    strategy: "reference",
+                    points: 15,
+                    feedback: "She becomes reference, introduces 2 companies. New pipeline opens. But internal expansion within this account slows.",
+                    momentum: +6,
+                    trust: +14,
+                    capacity: -18
+                  }
+                ];
+              }
+
+              return [
+                {
+                  text: "Lead with expansion proposal: 'We've proven value. Here's a roadmap for division 2 + investment needed. Let's plan this.' You take control of the conversation.",
+                  strategy: "leadWithOptions",
+                  points: 8,
+                  feedback: "Feels prescriptive. 'Let me think about whether we want this.' Expansion gets tabled. You overstepped.",
+                  momentum: +1,
+                  trust: +3,
+                  capacity: -12
+                },
+                {
+                  text: "Ask diagnostic questions: 'What's working? What could be better? Are there other divisions facing similar challenges?' You let them discover the expansion opportunity.",
+                  strategy: "letThemFind",
+                  points: 19,
+                  feedback: "They say: 'Division 2 has the same problem.' NOW THEY pitch expansion to you. Much stronger dynamic.",
+                  momentum: +11,
+                  trust: +16,
+                  capacity: -5
+                },
+                {
+                  text: "Offer reference + partnership: 'You've been great. Become customer reference? Testimonial + introduce peers.' You invest in advocacy instead of expansion.",
+                  strategy: "advocacy",
+                  points: 17,
+                  feedback: "They become reference, introduce peers. Pipeline grows. But less focus on internal expansion within this account.",
+                  momentum: +6,
+                  trust: +17,
+                  capacity: -12
+                }
+              ];
+            }
+
+            return [];
+          };
+
+          const generateDynamicPhase = (phaseNum, decisionHistory) => {
+            const timeInvested = decisionHistory[0]?.timeInvested || 'balanced';
+            const reachApproach = decisionHistory[1]?.reachApproach || 'safeButton';
+            
+            let company = 'Cipla';
+            let dealSize = '80K';
+            
+            if (phaseNum > 1) {
+              if (reachApproach === 'targetBig' || (timeInvested === 'concentrated' && reachApproach !== 'safeButton')) {
+                company = 'Glenmark';
+                dealSize = '120K';
+              }
+            }
+
+            if (phaseNum === 0) {
+              return {
+                name: "IDENTIFY",
+                title: "Research Strategy",
+                scenario: "You have 2 weeks to get pharma prospects in your pipeline. You've identified 5 companies with regulatory compliance challenges: Glenmark (large, $300K+ potential but complex), Cipla (mid-size, $80K potential, faster), and 3 others. How do you invest your 40 hours of research time?",
+                question: "What's your research approach?",
+                optionsList: getAllPhaseOptions(phaseNum, decisionHistory)
+              };
+            }
+
+            if (phaseNum === 1) {
+              const scenario = timeInvested === 'concentrated' 
+                ? "You've researched Glenmark thoroughly. Now it's time to reach out and get on their radar. You need to decide: do you go directly to the decision-maker (CTO), or start with an influencer (QA head Sarah)? Or cast a wider net?"
+                : "You have warm interest from multiple companies. Now you need to prioritize: should you all-in on Glenmark (bigger, slower), quick-win Cipla first (smaller, faster), or work both simultaneously?";
+              
+              return {
+                name: "REACH",
+                title: "Breaking Through",
+                scenario: scenario,
+                question: "What's your outreach strategy?",
+                optionsList: getAllPhaseOptions(phaseNum, decisionHistory)
+              };
+            }
+
+            if (phaseNum === 2) {
+              return {
+                name: "ENGAGE",
+                title: "Build Trust & Interest",
+                scenario: "In your discovery call with " + company + "'s CTO, she reveals her core concern: 'How do you handle rollouts without disrupting our operations? Our teams are already overloaded.' This is your moment to address her hesitation and prove you understand their real constraint.",
+                question: "How do you respond to her concern?",
+                optionsList: getAllPhaseOptions(phaseNum, decisionHistory)
+              };
+            }
+
+            if (phaseNum === 3) {
+              return {
+                name: "ACQUIRE",
+                title: "Close the Deal",
+                scenario: "Good news: " + company + "'s CTO champions your solution internally and is ready to sign. But the CFO—who controls the budget—is hesitant. She asks: 'How do we know this will actually reduce our compliance burden? What if it's just another tool that takes months to show value?' She's open to moving forward but needs to see proof of concept first. The CTO will move fast if the CFO approves. How do you convince her?",
+                question: "How do you address the CFO's skepticism?",
+                optionsList: getAllPhaseOptions(phaseNum, decisionHistory)
+              };
+            }
+
+            if (phaseNum === 4) {
+              return {
+                name: "EXPAND",
+                title: "Account Growth",
+                scenario: "Month 6: Your deployment at " + company + " is running smoothly. The CTO is happy with results. Now you're thinking about expansion—their other divisions have the same compliance headaches. But you're unsure of the dynamic. Is she ready for you to pitch expansion? Is she waiting for you to suggest it? Or should you consolidate this win and use her as a reference? You need to choose your expansion strategy.",
+                question: "How do you approach the expansion opportunity?",
+                optionsList: getAllPhaseOptions(phaseNum, decisionHistory)
+              };
+            }
+
+            return {
+              name: "UNKNOWN",
+              title: "Unknown Phase",
+              scenario: "Unknown phase",
+              question: "What's your next move?",
+              optionsList: getAllPhaseOptions(phaseNum, decisionHistory)
+            };
+          };
+
+          const handleChoice = (option) => {
+            if (!option) return;
+            
+            const newScore = score + (option.points || 0);
+            const newMomentum = Math.max(0, Math.min(100, momentum + (option.momentum || 0)));
+            const newTrust = Math.max(0, Math.min(100, trustScore + (option.trust || 0)));
+            const newCapacity = Math.max(0, Math.min(100, capacity + (option.capacity || 0)));
+            
+            setScore(newScore);
+            setMomentum(newMomentum);
+            setTrustScore(newTrust);
+            setCapacity(newCapacity);
+            
+            setChoices([...choices, { 
+              phase: currentPhase,
+              strategy: option.strategy || 'unknown',
+              feedback: option.feedback || 'Choice made',
+              points: option.points || 0,
+              momentum: option.momentum || 0,
+              trust: option.trust || 0,
+              capacity: option.capacity || 0,
+              ...option
+            }]);
+
+            setCurrentFeedback(option.feedback || 'Choice made');
+            setShowFeedback(true);
+
+            setTimeout(() => {
+              setShowFeedback(false);
+              if (currentPhase < 4) {
+                setCurrentPhase(currentPhase + 1);
+              } else {
+                setGameEnded(true);
+              }
+            }, 3500);
+          };
+
+          const resetGame = () => {
+            setGameStarted(false);
+            setCurrentPhase(0);
+            setScore(0);
+            setMomentum(50);
+            setTrustScore(50);
+            setCapacity(100);
+            setGameEnded(false);
+            setChoices([]);
+            setShowFeedback(false);
+            setCurrentFeedback(null);
+          };
+
+          const getInsights = (adjustedScore, momentum, trustScore, capacity) => {
+            const metricDiff = Math.abs(momentum - trustScore);
+            const effortSpent = 100 - capacity;
+
+            if (adjustedScore >= 90) {
+              if (metricDiff <= 20 && capacity >= 40) {
+                let improvement = "";
+                if (capacity < 50) improvement = "You could have preserved even more capacity by eliminating one unnecessary meeting or consolidation step.";
+                else if (momentum > 85) improvement = "Push trust slightly higher next time—aim for trust >= momentum to be truly unbeatable.";
+                else if (trustScore > 85) improvement = "Your momentum is solid but could match trust more closely for faster cycles.";
+                else improvement = "Already near-optimal. Minor: Could you have closed the deal 1-2 phases faster?";
+                
+                return <p>🏆 Masterful Execution: Near-perfect balance across all dimensions. What worked: Clear strategy, efficient execution, strong relationships, and healthy team. Could improve: {improvement}</p>;
+              }
+            }
+            
+            if (adjustedScore >= 80 && adjustedScore < 90) {
+              if (metricDiff <= 20 && capacity >= 35) {
+                let improvement = "";
+                if (momentum < 70) improvement = `Momentum lagged at ${momentum}. You moved too slowly. Push harder on scope/pricing negotiation in Phase 3 to accelerate without losing trust.`;
+                else if (trustScore < 70) improvement = `Trust only reached ${trustScore}. Invest earlier in relationship-building—add 1-2 trust-focused choices before Phase 3.`;
+                else if (capacity < 45) improvement = `You burned ${effortSpent}% of capacity. Next time, consolidate meetings or batch decisions to preserve team bandwidth.`;
+                else improvement = "Minor inefficiencies in Phase 2 or 3. Could you have made fewer pivots or decisions faster?";
+                
+                return <p>⭐ Strategic Win: Well-executed, balanced play with good fundamentals. What worked: Smart tradeoffs, solid relationships, team still standing. Could improve: {improvement}</p>;
+              }
+            }
+            
+            if (adjustedScore >= 75 && adjustedScore < 80) {
+              if (momentum > trustScore) {
+                const trustGap = momentum - trustScore;
+                return <p>⚡ Momentum Master: You prioritized speed and it paid off. What worked: Kept deal moving fast, maintained energy and pressure. Could improve: Trust lags momentum by {trustGap} points. Next time, add ONE relationship-building decision (like collaborative or diagnostic) earlier to keep them aligned. You will hit 85+ score.</p>;
+              }
+            }
+            
+            if (adjustedScore >= 70 && adjustedScore < 75) {
+              if (trustScore > momentum) {
+                const momentumGap = trustScore - momentum;
+                return <p>🤝 Relationship Builder: Customer is a genuine advocate. What worked: Built deep, authentic relationships and trust. Could improve: Momentum lags trust by {momentumGap} points. You moved too cautiously. Next time, push harder on pricing/scope in Phase 3 (try hybrid or guarantee) to accelerate without losing the relationship. Could hit 80+ score.</p>;
+              }
+            }
+            
+            if (adjustedScore < 70) {
+              let issue = "";
+              if (capacity < 30) issue = `Your team is exhausted (capacity: ${capacity}). You made too many high-cost choices. Next time: Skip service heavy or guarantee unless absolutely necessary.`;
+              else if (metricDiff > 30) issue = `Momentum (${momentum}) and Trust (${trustScore}) are severely misaligned (diff: ${metricDiff}). You changed strategies mid-deal. Pick ONE path (speed OR relationships) and commit to it.`;
+              else if (momentum < 40 && trustScore < 40) issue = "Both metrics are weak. You neither moved fast nor built trust. Restart: Choose either Phase 1 quick win OR concentrated research + safe button, then commit fully.";
+              else issue = "Mixed strategic signals throughout. Review: Did you rush some phases and crawl in others? Inconsistent pacing kills deals.";
+              
+              return <p>⚠️ Rough Execution: Mixed results with friction. What happened: {issue}</p>;
+            }
+          };
+
+          if (!gameStarted) {
+            return (
+              <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-500 to-purple-600 flex items-center justify-center p-4">
+                <div className="text-center max-w-2xl">
+                  <div className="flex justify-center mb-4"><Target /></div>
+                  <h1 className="text-4xl font-bold text-white mb-2">Sales Pipeline Sprint</h1>
+                  <p className="text-blue-100 text-lg mb-6">There's no perfect playbook. Only tradeoffs.</p>
+                  
+                  <div className="bg-white rounded-lg p-6 mb-6 shadow-xl">
+                    <p className="text-gray-700 mb-4">Navigate a pharma deal from day 1 to expansion. Every choice locks you into a different path.</p>
+                    <p className="text-sm text-gray-500 mb-4">3-4 minutes | 5 phases | Strategic decisions matter</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-orange-500/20 border border-orange-400 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <TrendingUp />
+                        <p className="font-bold text-white">MOMENTUM</p>
+                      </div>
+                      <p className="text-orange-100 text-sm">How fast you move the deal forward.</p>
+                    </div>
+                    <div className="bg-green-500/20 border border-green-400 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircle />
+                        <p className="font-bold text-white">TRUST</p>
+                      </div>
+                      <p className="text-green-100 text-sm">How strong your relationship is.</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-red-500/20 border border-red-400 rounded-lg p-4 mb-6">
+                    <div className="flex items-center gap-2 mb-2">
+                      <TrendingUp />
+                      <p className="font-bold text-white">CAPACITY</p>
+                    </div>
+                    <p className="text-red-100 text-sm">Your team's remaining bandwidth. Each decision costs resources. Don't hit zero!</p>
+                  </div>
+
+                  <button
+                    onClick={() => setGameStarted(true)}
+                    className="bg-white text-blue-600 px-8 py-3 rounded-lg font-bold text-lg hover:bg-blue-50 transition-all shadow-lg"
+                  >
+                    Start Playing →
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          if (gameEnded) {
+            let adjustedScore = score;
+            let capacityPenalty = 0;
+            let metricPenalty = 0;
+            let efficiencyBonus = 0;
+            
+            if (capacity < 20) {
+              capacityPenalty = 30;
+              adjustedScore -= 30;
+            } else if (capacity < 35) {
+              capacityPenalty = 15;
+              adjustedScore -= 15;
+            }
+
+            const metricDiff = Math.abs(momentum - trustScore);
+            if (metricDiff > 35) {
+              metricPenalty = 20;
+              adjustedScore -= 20;
+            } else if (metricDiff > 25) {
+              metricPenalty = 10;
+              adjustedScore -= 10;
+            }
+
+            if (capacity > 60 && score > 100 && capacityPenalty === 0) {
+              efficiencyBonus = 15;
+              adjustedScore += 15;
+            }
+
+            const effortSpent = 100 - capacity;
+
+            return (
+              <div className="min-h-screen bg-gradient-to-br from-green-600 via-blue-500 to-purple-600 flex items-center justify-center p-4">
+                <div className="text-center max-w-2xl">
+                  <div className="flex justify-center mb-4"><Award /></div>
+                  <h2 className="text-3xl font-bold text-white mb-6">Game Over</h2>
+                  
+                  <div className="bg-white rounded-lg p-6 mb-6 shadow-xl">
+                    <div className="grid grid-cols-1 mb-6">
+                      <div className="bg-gray-100 rounded-lg p-4 text-center">
+                        <p className="text-gray-600 text-xs font-semibold mb-2">FINAL METRICS</p>
+                        <p className="text-gray-700 text-sm mb-3">Momentum: {momentum} | Trust: {trustScore} | Capacity: {capacity}</p>
+                        <p className="text-3xl font-bold text-blue-600">Score: {adjustedScore}</p>
+                      </div>
+                    </div>
+
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
+                      <div className="text-left text-xs text-gray-700 space-y-2">
+                        {getInsights(adjustedScore, momentum, trustScore, capacity)}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={resetGame}
+                      className="w-full bg-white text-green-600 px-8 py-3 rounded-lg font-bold text-lg hover:bg-gray-100 transition-all shadow-lg"
+                    >
+                      Play Again
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          const phase = generateDynamicPhase(currentPhase, choices);
+          const progressPercent = ((currentPhase + 1) / 5) * 100;
+          const optionsList = Array.isArray(phase?.optionsList) ? phase.optionsList : [];
+          const shuffledOptions = shuffleArray(optionsList);
+
+          return (
+            <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center p-4">
+              <div className="w-full max-w-2xl">
+                <div className="mb-8">
+                  <div className="flex justify-between items-center mb-3">
+                    <h2 className="text-2xl font-bold text-white">
+                      <span className="text-blue-400">PHASE {currentPhase + 1}:</span> {phase?.name}
+                    </h2>
+                    <span className="text-white text-lg font-semibold">{score} pts</span>
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-3 mb-3">
+                    <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all" style={{width: progressPercent + '%'}}></div>
+                  </div>
+                  
+                  <div className="flex gap-4 text-xs">
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-gray-400 font-semibold">Momentum</span>
+                        <span className="text-gray-300">{momentum}</span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-1.5">
+                        <div className="bg-orange-500 h-1.5 rounded-full" style={{width: momentum + '%'}}></div>
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-gray-400 font-semibold">Trust</span>
+                        <span className="text-gray-300">{trustScore}</span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-1.5">
+                        <div className="bg-green-500 h-1.5 rounded-full" style={{width: trustScore + '%'}}></div>
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-gray-400 font-semibold">Capacity</span>
+                        <span className="text-gray-300">{capacity}</span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-1.5">
+                        <div className="bg-blue-500 h-1.5 rounded-full" style={{width: capacity + '%'}}></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-b from-gray-800 to-gray-700 rounded-xl p-8 shadow-2xl border border-gray-600">
+                  <h3 className="text-xl font-bold text-white mb-4">{phase?.title}</h3>
+
+                  {phase?.scenario && (
+                    <div className="bg-gray-900/50 rounded-lg p-4 mb-6 border-l-4 border-blue-500">
+                      <p className="text-gray-200 text-base">{phase.scenario}</p>
+                    </div>
+                  )}
+
+                  {phase?.question && (
+                    <p className="text-white font-bold text-lg mb-6">{phase.question}</p>
+                  )}
+
+                  <div className="space-y-3">
+                    {shuffledOptions.map((option, idx) => (
+                      <button
+                        key={'opt-' + currentPhase + '-' + idx}
+                        onClick={() => handleChoice(option)}
+                        className="w-full bg-gray-700 hover:bg-blue-600 text-white p-4 rounded-lg text-left transition-all font-semibold flex items-center justify-between group hover:shadow-lg disabled:opacity-50"
+                        disabled={showFeedback}
+                      >
+                        <span className="text-sm">{option?.text || ''}</span>
+                        <ChevronRight />
+                      </button>
+                    ))}
+                  </div>
+
+                  {showFeedback && currentFeedback && (
+                    <div className="mt-6 p-4 bg-blue-900/50 border border-blue-500 rounded-lg">
+                      <p className="text-blue-100 text-sm">{currentFeedback}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<PipelineGame />);
+    </script>
+</body>
+</html>
