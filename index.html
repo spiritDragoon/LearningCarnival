@@ -550,53 +550,53 @@
             const metricDiff = Math.abs(momentum - trustScore);
             const effortSpent = 100 - capacity;
 
+            // MASTERFUL: 90+
             if (adjustedScore >= 90) {
-              if (metricDiff <= 20 && capacity >= 40) {
-                let improvement = "";
-                if (capacity < 50) improvement = "You could have preserved even more capacity by eliminating one unnecessary meeting or consolidation step.";
-                else if (momentum > 85) improvement = "Push trust slightly higher next time—aim for trust >= momentum to be truly unbeatable.";
-                else if (trustScore > 85) improvement = "Your momentum is solid but could match trust more closely for faster cycles.";
-                else improvement = "Already near-optimal. Minor: Could you have closed the deal 1-2 phases faster?";
-                
-                return <p>🏆 Masterful Execution: Near-perfect balance across all dimensions. What worked: Clear strategy, efficient execution, strong relationships, and healthy team. Could improve: {improvement}</p>;
-              }
-            }
-            
-            if (adjustedScore >= 80 && adjustedScore < 90) {
-              if (metricDiff <= 20 && capacity >= 35) {
-                let improvement = "";
-                if (momentum < 70) improvement = `Momentum lagged at ${momentum}. You moved too slowly. Push harder on scope/pricing negotiation in Phase 3 to accelerate without losing trust.`;
-                else if (trustScore < 70) improvement = `Trust only reached ${trustScore}. Invest earlier in relationship-building—add 1-2 trust-focused choices before Phase 3.`;
-                else if (capacity < 45) improvement = `You burned ${effortSpent}% of capacity. Next time, consolidate meetings or batch decisions to preserve team bandwidth.`;
-                else improvement = "Minor inefficiencies in Phase 2 or 3. Could you have made fewer pivots or decisions faster?";
-                
-                return <p>⭐ Strategic Win: Well-executed, balanced play with good fundamentals. What worked: Smart tradeoffs, solid relationships, team still standing. Could improve: {improvement}</p>;
-              }
-            }
-            
-            if (adjustedScore >= 75 && adjustedScore < 80) {
-              if (momentum > trustScore) {
-                const trustGap = momentum - trustScore;
-                return <p>⚡ Momentum Master: You prioritized speed and it paid off. What worked: Kept deal moving fast, maintained energy and pressure. Could improve: Trust lags momentum by {trustGap} points. Next time, add ONE relationship-building decision (like collaborative or diagnostic) earlier to keep them aligned. You will hit 85+ score.</p>;
-              }
-            }
-            
-            if (adjustedScore >= 70 && adjustedScore < 75) {
-              if (trustScore > momentum) {
-                const momentumGap = trustScore - momentum;
-                return <p>🤝 Relationship Builder: Customer is a genuine advocate. What worked: Built deep, authentic relationships and trust. Could improve: Momentum lags trust by {momentumGap} points. You moved too cautiously. Next time, push harder on pricing/scope in Phase 3 (try hybrid or guarantee) to accelerate without losing the relationship. Could hit 80+ score.</p>;
-              }
-            }
-            
-            if (adjustedScore < 70) {
-              let issue = "";
-              if (capacity < 30) issue = `Your team is exhausted (capacity: ${capacity}). You made too many high-cost choices. Next time: Skip service heavy or guarantee unless absolutely necessary.`;
-              else if (metricDiff > 30) issue = `Momentum (${momentum}) and Trust (${trustScore}) are severely misaligned (diff: ${metricDiff}). You changed strategies mid-deal. Pick ONE path (speed OR relationships) and commit to it.`;
-              else if (momentum < 40 && trustScore < 40) issue = "Both metrics are weak. You neither moved fast nor built trust. Restart: Choose either Phase 1 quick win OR concentrated research + safe button, then commit fully.";
-              else issue = "Mixed strategic signals throughout. Review: Did you rush some phases and crawl in others? Inconsistent pacing kills deals.";
+              let improvement = "";
+              if (capacity < 50) improvement = "You could have preserved even more capacity by eliminating one unnecessary meeting or consolidation step.";
+              else if (momentum > 85) improvement = "Push trust slightly higher next time—aim for trust >= momentum to be truly unbeatable.";
+              else if (trustScore > 85) improvement = "Your momentum is solid but could match trust more closely for faster cycles.";
+              else improvement = "Already near-optimal. Minor: Could you have closed the deal 1-2 phases faster?";
               
-              return <p>⚠️ Rough Execution: Mixed results with friction. What happened: {issue}</p>;
+              return <p>🏆 <strong>Masterful Execution:</strong> Near-perfect balance across all dimensions. What worked: Clear strategy, efficient execution, strong relationships, and healthy team. Could improve: {improvement}</p>;
             }
+            
+            // STRATEGIC WIN: 80-89
+            if (adjustedScore >= 80) {
+              let improvement = "";
+              if (momentum < 70) improvement = `Momentum lagged at ${momentum}. You moved too slowly. Push harder on scope/pricing negotiation in Phase 3 to accelerate without losing trust.`;
+              else if (trustScore < 70) improvement = `Trust only reached ${trustScore}. Invest earlier in relationship-building—add 1-2 trust-focused choices before Phase 3.`;
+              else if (capacity < 45) improvement = `You burned ${effortSpent}% of capacity. Next time, consolidate meetings or batch decisions to preserve team bandwidth.`;
+              else improvement = "Minor inefficiencies in Phase 2 or 3. Could you have made fewer pivots or decisions faster?";
+              
+              return <p>⭐ <strong>Strategic Win:</strong> Well-executed, balanced play with good fundamentals. What worked: Smart tradeoffs, solid relationships, team still standing. Could improve: {improvement}</p>;
+            }
+            
+            // MOMENTUM MASTER: 75-79 (speed focused)
+            if (adjustedScore >= 75 && momentum > trustScore) {
+              const trustGap = momentum - trustScore;
+              return <p>⚡ <strong>Momentum Master:</strong> You prioritized speed and it paid off. What worked: Kept deal moving fast, maintained energy and pressure. Could improve: Trust lags momentum by {trustGap} points. Next time, add ONE relationship-building decision (like collaborative or diagnostic) earlier to keep them aligned. You will hit 85+ score.</p>;
+            }
+            
+            // RELATIONSHIP BUILDER: 70-79 (trust focused)
+            if (adjustedScore >= 70 && trustScore > momentum) {
+              const momentumGap = trustScore - momentum;
+              return <p>🤝 <strong>Relationship Builder:</strong> Customer is a genuine advocate. What worked: Built deep, authentic relationships and trust. Could improve: Momentum lags trust by {momentumGap} points. You moved too cautiously. Next time, push harder on pricing/scope in Phase 3 (try hybrid or guarantee) to accelerate without losing the relationship. Could hit 80+ score.</p>;
+            }
+            
+            // BALANCED BUT WEAK: 70-79 (neither metric dominates)
+            if (adjustedScore >= 70) {
+              return <p>✅ <strong>Solid Foundation:</strong> You completed the deal with balanced metrics. What worked: You didn't overcommit to one extreme. Could improve: Your score suggests inconsistent execution. Review your Phase 2-3 decisions—did you waffle between strategies? Pick a clearer path next time.</p>;
+            }
+            
+            // ROUGH EXECUTION: Below 70
+            let issue = "";
+            if (capacity < 30) issue = `Your team is exhausted (capacity: ${capacity}). You made too many high-cost choices. Next time: Skip service heavy or guarantee unless absolutely necessary.`;
+            else if (metricDiff > 30) issue = `Momentum (${momentum}) and Trust (${trustScore}) are severely misaligned (diff: ${metricDiff}). You changed strategies mid-deal. Pick ONE path (speed OR relationships) and commit to it.`;
+            else if (momentum < 40 && trustScore < 40) issue = "Both metrics are weak. You neither moved fast nor built trust. Restart: Choose either Phase 1 quick win OR concentrated research + safe button, then commit fully.";
+            else issue = "Mixed strategic signals throughout. Review: Did you rush some phases and crawl in others? Inconsistent pacing kills deals.";
+            
+            return <p>⚠️ <strong>Rough Execution:</strong> Mixed results with friction. What happened: {issue}</p>;
           };
 
           if (!gameStarted) {
